@@ -42,3 +42,21 @@ $ go get github/com/stretchr/testify/assert
 	assert.Equal("aaa", user.FirstName)
 	assert.Equal("bbb", user.LastName)
 ```
+
+### gorilla mux
+url path router 지정  
+https://github.com/gorilla/mux
+#### install
+```bash
+$ go get -u github.com/gorilla/mux
+```
+#### examples
+```go
+func main() {
+    r := mux.NewRouter()
+    r.HandleFunc("/", HomeHandler)
+    r.HandleFunc("/products", ProductsHandler)
+    r.HandleFunc("/articles", ArticlesHandler)
+    http.Handle("/", r)
+}
+```
