@@ -76,3 +76,13 @@ https://github.com/urfave/negroni/blob/master/translations/README_ko_KR.md#stati
 ### antage eventsource
 http server를 위한 server-sent eventsource 기능 제공 pkackage  
 https://github.com/antage/eventsource
+
+### golang oauth2 package
+```
+$ go get golang.org/x/oauth2
+```
+
+### golang google cloud package
+```
+$ go get cloud.google.com/go
+```
