@@ -3,186 +3,93 @@ package myapp
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strconv"
-	"strings"
 	"testing"
+	"web1/model"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func TestIndex(t *testing.T) {
+func TestTodos(t *testing.T) {
 	assert := assert.New(t)
-
-	ts := httptest.NewServer(NewHandler())
+	ts := httptest.NewServer(MakeHandler())
 	defer ts.Close()
 
-	resp, err := http.Get(ts.URL)
-	assert.NoError(err)
-	assert.Equal(http.StatusOK, resp.StatusCode)
-	data, _ := ioutil.ReadAll(resp.Body)
-	assert.Equal("Hello World", string(data))
-}
-
-func TestUsers(t *testing.T) {
-	assert := assert.New(t)
-
-	ts := httptest.NewServer(NewHandler())
-	defer ts.Close()
-
-	resp, err := http.Get(ts.URL + "/users")
-	assert.NoError(err)
-	assert.Equal(http.StatusOK, resp.StatusCode)
-
-	data, _ := ioutil.ReadAll(resp.Body)
-	assert.Contains(string(data), "No Users")
-}
-
-func TestGetUserInfo(t *testing.T) {
-	assert := assert.New(t)
-
-	ts := httptest.NewServer(NewHandler())
-	defer ts.Close()
-
-	resp, err := http.Get(ts.URL + "/users/89")
-	assert.NoError(err)
-	assert.Equal(http.StatusOK, resp.StatusCode)
-	data, _ := ioutil.ReadAll(resp.Body)
-	assert.Contains(string(data), "89")
-
-	resp, err = http.Get(ts.URL + "/users/56")
-	assert.NoError(err)
-	assert.Equal(http.StatusOK, resp.StatusCode)
-	data, _ = ioutil.ReadAll(resp.Body)
-	assert.Contains(string(data), "56")
-}
-
-func TestCreateUser(t *testing.T) {
-	assert := assert.New(t)
-
-	ts := httptest.NewServer(NewHandler())
-	defer ts.Close()
-
-	resp, err := http.Post(ts.URL+"/users", "application/json",
-		strings.NewReader(`{"first_name":"aaa", "last_name":"bbb", "email":"ccc"}`))
-
+	resp, err := http.PostForm(ts.URL+"/todos", url.Values{"name": {"Test Todo"}})
 	assert.NoError(err)
 	assert.Equal(http.StatusCreated, resp.StatusCode)
 
-	user := new(User)
-	err = json.NewDecoder(resp.Body).Decode(user)
-
+	var todo model.Todo
+	err = json.NewDecoder(resp.Body).Decode(&todo)
 	assert.NoError(err)
-	assert.NotEqual(0, user.ID)
+	assert.Equal(todo.Name, "Test Todo")
+	id1 := todo.ID
 
-	id := user.ID
-	resp, err = http.Get(ts.URL + "/users/" + strconv.Itoa(id))
-	assert.NoError(err)
-	assert.Equal(http.StatusOK, resp.StatusCode)
-	user2 := new(User)
-	err = json.NewDecoder(resp.Body).Decode(user2)
-	assert.NoError(err)
-	assert.Equal(user.ID, user2.ID)
-}
-
-func TestDeleteUser(t *testing.T) {
-	assert := assert.New(t)
-
-	ts := httptest.NewServer(NewHandler())
-	defer ts.Close()
-
-	req, _ := http.NewRequest("DELETE", ts.URL+"/users/1", nil)
-	resp, err := http.DefaultClient.Do(req)
-	assert.NoError(err)
-	assert.Equal(http.StatusOK, resp.StatusCode)
-	data, _ := ioutil.ReadAll(resp.Body)
-	assert.Contains(string(data), "No User ID:1")
-
-	resp, err = http.Post(ts.URL+"/users", "application/json",
-		strings.NewReader(`{"first_name":"aaa", "last_name":"bbb", "email":"ccc"}`))
+	resp, err = http.PostForm(ts.URL+"/todos", url.Values{"name": {"Test Todo2"}})
 	assert.NoError(err)
 	assert.Equal(http.StatusCreated, resp.StatusCode)
 
-	user := new(User)
-	err = json.NewDecoder(resp.Body).Decode(user)
+	err = json.NewDecoder(resp.Body).Decode(&todo)
 	assert.NoError(err)
-	assert.NotEqual(0, user.ID)
+	assert.Equal(todo.Name, "Test Todo2")
+	id2 := todo.ID
 
-	req, _ = http.NewRequest("DELETE", ts.URL+"/users/1", nil)
+	resp, err = http.Get(ts.URL + "/todos")
+	assert.NoError(err)
+	assert.Equal(http.StatusOK, resp.StatusCode)
+	todos := []*model.Todo{}
+	err = json.NewDecoder(resp.Body).Decode(&todos)
+	assert.NoError(err)
+	assert.Equal(len(todos), 2)
+
+	for _, t := range todos {
+		if t.ID == id1 {
+			assert.Equal("Test Todo", t.Name)
+		} else if t.ID == id2 {
+			assert.Equal("Test Todo2", t.Name)
+		} else {
+			assert.Error(fmt.Errorf("testID should be id1 or id2"))
+		}
+	}
+
+	resp, err = http.Get(ts.URL + "/complete-todo/" + strconv.Itoa(id1) + "?complete=true")
+	assert.NoError(err)
+	assert.Equal(http.StatusOK, resp.StatusCode)
+
+	resp, err = http.Get(ts.URL + "/todos")
+	assert.NoError(err)
+	assert.Equal(http.StatusOK, resp.StatusCode)
+	todos = []*model.Todo{}
+	err = json.NewDecoder(resp.Body).Decode(&todos)
+	assert.NoError(err)
+	assert.Equal(len(todos), 2)
+
+	for _, t := range todos {
+		if t.ID == id1 {
+			assert.True(t.Completed)
+		}
+	}
+
+	req, _ := http.NewRequest("DELETE", ts.URL+"/todos/"+strconv.Itoa(id1), nil)
 	resp, err = http.DefaultClient.Do(req)
-	assert.NoError(err)
-	assert.Equal(http.StatusOK, resp.StatusCode)
-	data, _ = ioutil.ReadAll(resp.Body)
-	assert.Contains(string(data), "Deleted User ID:1")
-}
 
-func TestUpdateUser(t *testing.T) {
-	assert := assert.New(t)
-
-	ts := httptest.NewServer(NewHandler())
-	defer ts.Close()
-
-	req, _ := http.NewRequest("PUT", ts.URL+"/users",
-		strings.NewReader(`{"id":1, "first_name":"updated", "last_name":"updated", "email":"updated@naver.com"}`))
-	resp, err := http.DefaultClient.Do(req)
-	assert.NoError(err)
-	assert.Equal(http.StatusOK, resp.StatusCode)
-	data, _ := ioutil.ReadAll(resp.Body)
-	assert.Contains(string(data), "No User ID:1")
-
-	resp, err = http.Post(ts.URL+"/users", "application/json",
-		strings.NewReader(`{"first_name":"aaa", "last_name":"bbb", "email":"ccc"}`))
-	assert.NoError(err)
-	assert.Equal(http.StatusCreated, resp.StatusCode)
-
-	user := new(User)
-	err = json.NewDecoder(resp.Body).Decode(user)
-	assert.NoError(err)
-	assert.NotEqual(0, user.ID)
-	updateStr := fmt.Sprintf(`{"id":%d, "first_name":"updated11111", "last_name":"updated", "email":"updated@naver.com"}`, user.ID)
-
-	req, _ = http.NewRequest("PUT", ts.URL+"/users",
-		strings.NewReader(updateStr))
-	resp, err = http.DefaultClient.Do(req)
 	assert.NoError(err)
 	assert.Equal(http.StatusOK, resp.StatusCode)
 
-	updateUser := new(User)
-	err = json.NewDecoder(resp.Body).Decode(updateUser)
-	assert.NoError(err)
-	assert.Equal(updateUser.ID, user.ID)
-	assert.Equal("updated11111", updateUser.FirstName)
-}
-
-func TestUsers_WithUsersData(t *testing.T) {
-	assert := assert.New(t)
-
-	ts := httptest.NewServer(NewHandler())
-	defer ts.Close()
-
-	resp, err := http.Post(ts.URL+"/users", "application/json",
-		strings.NewReader(`{"first_name":"aaa", "last_name":"bbb", "email":"ccc"}`))
-	assert.NoError(err)
-	assert.Equal(http.StatusCreated, resp.StatusCode)
-
-	resp, err = http.Post(ts.URL+"/users", "application/json",
-		strings.NewReader(`{"first_name":"aaa2", "last_name":"bbb2", "email":"ccc2"}`))
-	assert.NoError(err)
-	assert.Equal(http.StatusCreated, resp.StatusCode)
-
-	resp, err = http.Post(ts.URL+"/users", "application/json",
-		strings.NewReader(`{"first_name":"aaa3", "last_name":"bbb3", "email":"ccc3"}`))
-	assert.NoError(err)
-	assert.Equal(http.StatusCreated, resp.StatusCode)
-
-	resp, err = http.Get(ts.URL + "/users")
+	resp, err = http.Get(ts.URL + "/todos")
 	assert.NoError(err)
 	assert.Equal(http.StatusOK, resp.StatusCode)
-
-	users := []*User{}
-	err = json.NewDecoder(resp.Body).Decode(&users)
+	todos = []*model.Todo{}
+	err = json.NewDecoder(resp.Body).Decode(&todos)
 	assert.NoError(err)
-	assert.Equal(3, len(users))
+	assert.Equal(len(todos), 1)
+
+	for _, t := range todos {
+		if t.ID == id2 {
+			assert.Equal(t.ID, id2)
+		}
+	}
 }
