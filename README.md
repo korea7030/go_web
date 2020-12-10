@@ -60,3 +60,15 @@ func main() {
     http.Handle("/", r)
 }
 ```
+### gorilla pat
+RESTful api를 간단하게 구현하게 하는 package  
+https://github.com/gorilla/pat
+
+### unrolled render
+JSON, XML, text, binary data, HTML templates의 rendering을 쉽게 해줌  
+https://github.com/unrolled/render
+
+### negroni
+Go의 웹 미들웨어 기능을 모아놓은 package  
+Routing, Static, Logging 등의 기능 제공  
+https://github.com/urfave/negroni/blob/master/translations/README_ko_KR.md#staticv

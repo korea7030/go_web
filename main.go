@@ -1,34 +1,82 @@
 package main
 
 import (
-	// "html/template"
-	"os"
-	"text/template"
+	"encoding/json"
+	"net/http"
+	"time"
+
+	"github.com/urfave/negroni"
+
+	"github.com/gorilla/pat"
+	"github.com/unrolled/render"
 )
 
+var rd *render.Render
+
 type User struct {
-	Name  string
-	Email string
-	Age   int
+	Name      string    `json:"name"`
+	Email     string    `json:"email"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
-func (u User) IsOld() bool {
-	return u.Age > 30
+func getUserInfoHandler(w http.ResponseWriter, r *http.Request) {
+	user := User{Name: "aaa", Email: "bbb"}
+
+	rd.JSON(w, http.StatusOK, user)
+	// w.Header().Add("Content-type", "application/json")
+	// w.WriteHeader(http.StatusOK)
+	// data, _ := json.Marshal(user)
+	// fmt.Fprint(w, string(data))
+
+}
+
+func addUserHandler(w http.ResponseWriter, r *http.Request) {
+	user := new(User)
+	err := json.NewDecoder(r.Body).Decode(user)
+	if err != nil {
+		// w.WriteHeader(http.StatusBadRequest)
+		// fmt.Fprint(w, err)
+		rd.Text(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	user.CreatedAt = time.Now()
+	rd.JSON(w, http.StatusOK, user)
+	// w.Header().Add("Content-type", "application/json")
+	// w.WriteHeader(http.StatusOK)
+	// data, _ := json.Marshal(user)
+	// fmt.Fprint(w, string(data))
+}
+
+func helloHandler(w http.ResponseWriter, r *http.Request) {
+	user := User{Name: "aaa", Email: "bbb"}
+	// tmpl, err := template.New("Hello").ParseFiles("templates/hello.tmpl")
+	// if err != nil {
+	// 	// w.WriteHeader(http.StatusInternalServerError)
+	// 	// fmt.Fprint(w, err)
+	// 	rd.Text(w, http.StatusInternalServerError, err.Error())
+	// 	return
+	// }
+	rd.HTML(w, http.StatusOK, "body", user)
+	// tmpl.ExecuteTemplate(w, "hello.tmpl", "aaa")
 }
 
 func main() {
-	user := User{Name: "aaa", Email: "bbb", Age: 23}
-	user2 := User{Name: "bbb", Email: "aaa@naver.com", Age: 40}
-	users := []User{user, user2}
-	// template 파일
-	templ, err := template.New("Tmpl1").ParseFiles("templates/tmpl1.tmpl", "templates/tmpl2.tmpl")
-	if err != nil {
-		panic(err)
-	}
-	// template 파일로 하지 않을 경우
-	// templ.Execute(os.Stdout, user)
-	// templ.Execute(os.Stdout, user2)
+	// templates확장자가 기본 폴더: "templates", 파일확장자: "tmpl" 로 되어있음
+	rd = render.New(render.Options{
+		Directory:  "templates",
+		Extensions: []string{".html", ".tmpl"},
+		Layout:     "hello",
+	})
+	mux := pat.New()
 
-	// template파일을 사용할 경우
-	templ.ExecuteTemplate(os.Stdout, "tmpl2.tmpl", users)
+	mux.Get("/users", getUserInfoHandler)
+	mux.Post("/users", addUserHandler)
+	mux.Get("/hello", helloHandler)
+
+	n := negroni.Classic()
+	n.UseHandler(mux)
+	// mux.Handle("/", http.FileServer(http.Dir("public")))
+
+	http.ListenAndServe(":4000", n)
 }
