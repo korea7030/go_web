@@ -72,3 +72,7 @@ https://github.com/unrolled/render
 Go의 웹 미들웨어 기능을 모아놓은 package  
 Routing, Static, Logging 등의 기능 제공  
 https://github.com/urfave/negroni/blob/master/translations/README_ko_KR.md#staticv
+
+### antage eventsource
+http server를 위한 server-sent eventsource 기능 제공 pkackage  
+https://github.com/antage/eventsource
