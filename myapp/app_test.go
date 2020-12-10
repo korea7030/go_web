@@ -15,9 +15,13 @@ import (
 )
 
 func TestTodos(t *testing.T) {
+	// mock-up function
+	getSesssionID = func(r *http.Request) string {
+		return "testsessionId"
+	}
 	os.Remove("./test.db")
 	assert := assert.New(t)
-	ah := MakeHandler()
+	ah := MakeHandler("./test.db")
 	defer ah.Close()
 	ts := httptest.NewServer(ah)
 	defer ts.Close()

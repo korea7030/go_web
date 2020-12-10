@@ -22,7 +22,8 @@ type AppHandler struct {
 	db model.DBHandler
 }
 
-func getSesssionID(r *http.Request) string {
+// 변수형태로 함수를 생성(lambda)
+var getSesssionID = func(r *http.Request) string {
 	session, err := store.Get(r, "session")
 	if err != nil {
 		return ""
@@ -41,13 +42,15 @@ func (a *AppHandler) indexHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *AppHandler) getTodoListHandler(w http.ResponseWriter, r *http.Request) {
-	list := a.db.GetTodos()
+	sessionId := getSesssionID(r)
+	list := a.db.GetTodos(sessionId)
 	rd.JSON(w, http.StatusOK, list)
 }
 
 func (a *AppHandler) addTodoHandler(w http.ResponseWriter, r *http.Request) {
+	sessionId := getSesssionID(r)
 	name := r.FormValue("name")
-	todo := a.db.AddTodo(name)
+	todo := a.db.AddTodo(name, sessionId)
 	rd.JSON(w, http.StatusCreated, todo)
 }
 
@@ -84,7 +87,7 @@ func (a *AppHandler) Close() {
 
 func CheckSignin(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	// if request URL is /signin.html, then next()
-	if strings.Contains(r.URL.Path, "/signin.html") ||
+	if strings.Contains(r.URL.Path, "/signin") ||
 		strings.Contains(r.URL.Path, "/auth") {
 		next(w, r)
 		return
