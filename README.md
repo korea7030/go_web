@@ -86,3 +86,6 @@ $ go get golang.org/x/oauth2
 ```
 $ go get cloud.google.com/go
 ```
+
+### golang sqlite3
+https://github.com/mattn/go-sqlite3

@@ -15,7 +15,7 @@ func (m *memoryHandler) GetTodos() []*Todo {
 	return list
 }
 
-func (m *memoryHandler) addTodo(name string) *Todo {
+func (m *memoryHandler) AddTodo(name string) *Todo {
 	id := len(m.todoMap) + 1
 	todo := &Todo{id, name, false, time.Now()}
 	m.todoMap[id] = todo
@@ -38,4 +38,14 @@ func (m *memoryHandler) CompleteTodo(id int, complete bool) bool {
 	} else {
 		return false
 	}
+}
+
+func (m *memoryHandler) Close() {
+
+}
+
+func newMemoryHandler() DBHandler {
+	m := &memoryHandler{}
+	m.todoMap = make(map[int]*Todo)
+	return m
 }
