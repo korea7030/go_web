@@ -1,37 +1,34 @@
 package main
 
 import (
-	"log"
-	"net/http"
-	"time"
-
-	"web1/decoHandler"
-	"web1/myapp"
+	// "html/template"
+	"os"
+	"text/template"
 )
 
-func logger(w http.ResponseWriter, r *http.Request, h http.Handler) {
-	start := time.Now()
-	log.Println("[LOGGER1] Started")
-	h.ServeHTTP(w, r)
-	log.Println("[LOGGER1] Completed time:", time.Since(start).Milliseconds())
+type User struct {
+	Name  string
+	Email string
+	Age   int
 }
 
-func logger2(w http.ResponseWriter, r *http.Request, h http.Handler) {
-	start := time.Now()
-	log.Println("[LOGGER2] Started")
-	h.ServeHTTP(w, r) // logger1 호출
-	log.Println("[LOGGER2] Completed time:", time.Since(start).Milliseconds())
-}
-
-func NewHandler() http.Handler {
-	h := myapp.NewHandler()
-	h = decoHandler.NewDecoHandler(h, logger)
-	h = decoHandler.NewDecoHandler(h, logger2)
-	return h
+func (u User) IsOld() bool {
+	return u.Age > 30
 }
 
 func main() {
-	mux := NewHandler()
+	user := User{Name: "aaa", Email: "bbb", Age: 23}
+	user2 := User{Name: "bbb", Email: "aaa@naver.com", Age: 40}
+	users := []User{user, user2}
+	// template 파일
+	templ, err := template.New("Tmpl1").ParseFiles("templates/tmpl1.tmpl", "templates/tmpl2.tmpl")
+	if err != nil {
+		panic(err)
+	}
+	// template 파일로 하지 않을 경우
+	// templ.Execute(os.Stdout, user)
+	// templ.Execute(os.Stdout, user2)
 
-	http.ListenAndServe(":4000", mux)
+	// template파일을 사용할 경우
+	templ.ExecuteTemplate(os.Stdout, "tmpl2.tmpl", users)
 }
