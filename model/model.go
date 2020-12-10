@@ -11,41 +11,38 @@ type Todo struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
-var todoMap map[int]*Todo
+type dbHandler interface {
+	GetTodos() []*Todo
+	addTodo(name string) *Todo
+	RemoveTodo(id int) bool
+	CompleteTodo(id int, complete bool) bool
+}
+
+var handler dbHandler
 
 func init() {
-	todoMap = make(map[int]*Todo)
+	// handler = newMemoryHandler()
+	handler = newSqliteHandler()
 }
-func GetTodos() []*Todo {
-	list := []*Todo{}
-	for _, v := range todoMap {
-		list = append(list, v)
-	}
 
-	return list
+func newMemoryHandler() dbHandler {
+	m := &memoryHandler{}
+	m.todoMap = make(map[int]*Todo)
+	return m
+}
+
+func GetTodos() []*Todo {
+	return handler.GetTodos()
 }
 
 func AddTodo(name string) *Todo {
-	id := len(todoMap) + 1
-	todo := &Todo{id, name, false, time.Now()}
-	todoMap[id] = todo
-	return todoMap[id]
+	return handler.addTodo(name)
 }
 
 func RemoveTodo(id int) bool {
-	if _, ok := todoMap[id]; ok {
-		delete(todoMap, id)
-		return true
-	} else {
-		return false
-	}
+	return handler.RemoveTodo(id)
 }
 
 func CompleteTodo(id int, complete bool) bool {
-	if todo, ok := todoMap[id]; ok {
-		todo.Completed = complete
-		return true
-	} else {
-		return false
-	}
+	return handler.CompleteTodo(id, complete)
 }
