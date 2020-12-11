@@ -3,15 +3,17 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 	"web/todos/myapp"
 )
 
 func main() {
-	m := myapp.MakeHandler("./test.db")
+	port := os.Getenv("PORT")
+	m := myapp.MakeHandler(os.Getenv("DATABASE_URL"))
 	defer m.Close()
 
 	log.Println("Started App")
-	err := http.ListenAndServe(":4000", m)
+	err := http.ListenAndServe(":"+port, m)
 	if err != nil {
 		panic(err)
 	}
