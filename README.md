@@ -93,6 +93,9 @@ https://github.com/mattn/go-sqlite3
 ### golang session
 https://godoc.org/github.com/gorilla/sessions
 
+### golang wbesocket
+https://godoc.org/github.com/gorilla/websocket
+
 ### heroku 배포
 https://devcenter.heroku.com/articles/getting-started-with-go
 #### module 선언
