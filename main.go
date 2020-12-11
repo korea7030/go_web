@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
-	"web1/myapp"
+	"web/todos/myapp"
 )
 
 func main() {

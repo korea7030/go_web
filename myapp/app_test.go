@@ -9,7 +9,7 @@ import (
 	"os"
 	"strconv"
 	"testing"
-	"web1/model"
+	"web/todos/model"
 
 	"github.com/stretchr/testify/assert"
 )

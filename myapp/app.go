@@ -5,7 +5,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"web1/model"
+	"web/todos/model"
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"

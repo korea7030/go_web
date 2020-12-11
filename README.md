@@ -89,3 +89,46 @@ $ go get cloud.google.com/go
 
 ### golang sqlite3
 https://github.com/mattn/go-sqlite3
+
+### golang session
+https://godoc.org/github.com/gorilla/sessions
+
+### heroku 배포
+https://devcenter.heroku.com/articles/getting-started-with-go
+#### module 선언
+```
+$ go mod init <module_name>
+```
+수행하면 go.mod 파일이 생성  
+
+#### build
+```
+$ go build -o ./bin/<module_name>.exe -v .
+```
+수행하면 go.sum 파일이 생성되며, output으로 bin 폴더 아래에 지정한 module_name으로 exe 파일이 생성  
+
+
+1. heroku git init
+```
+$ git init
+```
+
+2. heroku create  
+url 주소가 나타난다
+```
+$ heroku create
+```
+
+3. heroku deploy
+```
+$ git push heroku main
+```
+
+#### crash 날경우
+1. Port 번호를 env 지정
+2. Profile 파일 생성 후 실행경로 지정
+
+#### 환경변수가 없을 경우
+```
+$ heroku config:set <your_variable>=<your_value>
+```
